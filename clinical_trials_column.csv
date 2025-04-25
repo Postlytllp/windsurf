@@ -1,0 +1,51 @@
+column_name,data_type,example_value,description
+nctId,string,NCT03473327,The unique identifier for each clinical trial registered on ClinicalTrials.gov.
+organization,string,Zealand University Hospital,The name of the organization conducting the clinical trial.
+organizationType,string,OTHER,"The type of organization, such as 'OTHER', 'INDUSTRY', 'NIH', 'OTHER_GOV', 'INDIV', 'FED', 'NETWORK', 'UNKNOWN'."
+briefTitle,string,Immunological and Oxidative Stress Response in...,"A short title for the clinical trial, intended for easy reference."
+officialTitle,string,Immunological and Oxidative Stress Response in...,The full official title of the clinical trial.
+statusVerifiedDate,datetime,2018-03-01 00:00:00,The date when the status of the clinical trial was last verified.
+overallStatus,string,COMPLETED,"The current overall status of the clinical trial like 'COMPLETED', 'UNKNOWN', 'ACTIVE_NOT_RECRUITING', 'RECRUITING', 'WITHDRAWN', 'TERMINATED', 'ENROLLING_BY_INVITATION', 'NOT_YET_RECRUITING', 'APPROVED_FOR_MARKETING', 'SUSPENDED','AVAILABLE'."
+hasExpandedAccess,boolean,False,It has boolean values and it indicates whether the clinical trial includes expanded access to the investigational drug or device outside of the clinical trial.
+startDate,datetime,2016-01-01 00:00:00,The date when the clinical trial began.
+completionDate,datetime,2017-12-01 00:00:00,The date when the clinical trial was completed.
+completionDateType,string,ACTUAL,"The type of completion date, specifying whether it refers to the ACTUAL or ESTIMATED."
+studyFirstSubmitDate,datetime,2016-02-29 00:00:00,The date when the clinical trial information was first submitted to ClinicalTrials.gov.
+studyFirstPostDate,datetime,2018-03-22 00:00:00,The date when the clinical trial information was first posted on ClinicalTrials.gov.
+lastUpdatePostDate,datetime,2018-03-22 00:00:00,The date when the clinical trial information was last updated on ClinicalTrials.gov.
+lastUpdatePostDateType,string,ACTUAL,"The type of last update post date, specifying whether it refers to the actual or anticipated date."
+HasResults,boolean,False,It contains boolean values and indicates whether the results of the clinical trial have been posted on ClinicalTrials.gov.
+responsibleParty,string,,The individual or organization responsible for the overall conduct of the clinical trial.
+leadSponsor,string,Zealand University Hospital,"The primary sponsor responsible for the initiation, management, and financing of the clinical trial."
+leadSponsorType,string,OTHER,"The type of the lead sponsor, such as academic, industry, or government."
+collaborators,string,Odense University Hospital,Other organizations or individuals collaborating on the clinical trial.
+collaboratorsType,string,OTHER,The types of collaborators involved in the clinical trial.
+briefSummary,string,The aim of this study is to characterize the s...,"A brief summary of the clinical trial, providing an overview of the study's purpose and key details."
+detailedDescription,string,Background\n\nThe perioperative period is rela...,"A detailed description of the clinical trial, including comprehensive information about the study design, methodology, and objectives."
+conditions,string,Colorectal Neoplasms,The medical conditions or diseases being studied in the clinical trial.
+studyType,string,OBSERVATIONAL,"The type of study (e.g., 'INTERVENTIONAL', 'OBSERVATIONAL', 'EXPANDED_ACCESS')."
+phases,string,,"The phase of the clinical trial (e.g., 'NA', 'PHASE2', 'PHASE2, PHASE3', 'PHASE3', 'PHASE1', 'PHASE4','PHASE1, PHASE2', 'EARLY_PHASE1')."
+allocation,string,,"The method of assigning participants to different arms of the clinical trial (e.g., 'RANDOMIZED','NON_RANDOMIZED')."
+interventionModel,string,,"The model of intervention used in the clinical trial (e.g., 'SINGLE_GROUP', 'PARALLEL', 'CROSSOVER', 'SEQUENTIAL', 'FACTORIAL')."
+primaryPurpose,string,,"The primary purpose of the clinical trial like 'PREVENTION', 'TREATMENT', 'SUPPORTIVE_CARE','BASIC_SCIENCE', 'DIAGNOSTIC', 'OTHER', 'ECT', 'SCREENING','HEALTH_SERVICES_RESEARCH', 'DEVICE_FEASIBILITY')."
+masking,string,,"The method used to prevent bias by concealing the allocation of participants (e.g., 'QUADRUPLE', 'NONE', 'DOUBLE', 'TRIPLE', 'SINGLE')."
+whoMasked,string,,"Specifies who is masked in the clinical trial etc. PARTICIPANT, INVESTIGATOR etc)."
+enrollmentCount,number,37.0,The number of participants enrolled in the clinical trial.
+enrollmentType,string,ACTUAL,"The type of enrollment, specifying whether the number is ACTUAL or ESTIMATED."
+arms,string,,The number of arms or groups in the clinical trial.
+interventionDrug,string,,The drugs or medications being tested or used as interventions in the clinical trial.
+interventionBiological,string,,"Biological interventions (e.g., vaccines, blood products) used in the clinical trial."
+interventioOthers,string,,"Other types of interventions used in the clinical trial (e.g., devices, procedures)."
+interventionDescription,string,,Descriptions of the interventions used in the clinical trial.
+primaryOutcomes,string,Primary Outcome 1: Oxidative and immunological...,The primary outcome measures being assessed in the clinical trial.
+secondaryOutcomes,string,Secondary Outcome 1: Specific immune modulatin...,The secondary outcome measures being assessed in the clinical trial.
+eligibilityCriteria,string,Inclusion Criteria:\n\n1. Patients between 18 ...,The criteria that determine whether individuals can participate in the clinical trial.
+healthyVolunteers,boolean,False,Indicates whether healthy volunteers are accepted in the clinical trial.
+eligibilityGender,string,ALL,The gender eligibility criteria for participants in the clinical trial.
+eligibilityMinimumAge,string,18 Years,The minimum age of participants eligible for the clinical trial.
+eligibilityMaximumAge,string,75 Years,The maximum age of participants eligible for the clinical trial.
+eligibilityStandardAges,string,"[ADULT, OLDER_ADULT]",Standard age groups eligible for the clinical trial.
+LocationName,string,,The names of the locations where the clinical trial is being conducted.
+city,string,,The city where the clinical trial locations are situated.
+state,string,,The state where the clinical trial locations are situated.
+country,string,,The country where the clinical trial locations are situated.
