@@ -67,7 +67,7 @@
     <!-- Main App (Hidden until logged in) -->
     <div id="app-container" class="d-none">
         <!-- Header -->
-        <header class="bg-primary text-white p-3">
+        <header class="bg-primary text-white p-3 glass-card">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center">
                     <h1 class="h3 mb-0">Clinical Trials & FDA Data Search</h1>
@@ -81,7 +81,7 @@
 
         <!-- Search Section -->
         <section class="container mt-4">
-            <div class="card">
+            <div class="card glass-card">
                 <div class="card-body">
                     <h2 class="card-title h4">Search</h2>
                     <form id="search-form">
@@ -91,25 +91,90 @@
                                 <input type="text" class="form-control" id="keyword" placeholder="Enter disease or drug name" required>
                             </div>
                             <div class="col-12">
-                                <div class="search-type-buttons text-center">
-                                    <label class="form-label d-block mb-2">Search Type</label>
-                                    <div class="btn-group" role="group" aria-label="Search Type">
-                                        <input type="radio" class="btn-check" name="searchType" id="disease-btn" value="disease" checked>
-                                        <label class="btn btn-outline-primary" for="disease-btn">Disease</label>
-                                        
-                                        <input type="radio" class="btn-check" name="searchType" id="drug-btn" value="drug">
-                                        <label class="btn btn-outline-primary" for="drug-btn">Drug</label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <div class="search-type-buttons text-start">
+                                            <label class="form-label d-block mb-2 small">Search Type</label>
+                                            <div class="btn-group btn-group-sm" role="group" aria-label="Search Type">
+                                                <input type="radio" class="btn-check" name="searchType" id="disease-btn" value="disease" checked>
+                                                <label class="btn btn-outline-primary" for="disease-btn">Disease</label>
+                                                
+                                                <input type="radio" class="btn-check" name="searchType" id="drug-btn" value="drug">
+                                                <label class="btn btn-outline-primary" for="drug-btn">Drug</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary" id="search-btn">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg px-5" id="search-btn">
                                     <span class="spinner-border spinner-border-sm d-none" id="search-spinner"></span>
                                     Search
                                 </button>
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enhanced Dashboard -->
+        <section class="container mt-4" id="enhanced-dashboard">
+            <div class="row">
+                <!-- Trial Stages Chart -->
+                <div class="col-md-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="h5 mb-0">Trial Stages Distribution</h3>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div id="trial-stages-chart-container" class="chart-container">
+                                <canvas id="trial-stages-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Sponsors Chart -->
+                <div class="col-md-6 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="h5 mb-0">Top 5 Sponsors</h3>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div class="chart-container">
+                                <canvas id="top-sponsors-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Top Interventions Table -->
+                <div class="col-md-12 mb-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="h5 mb-0">Top 5 Interventions Being Studied</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="top-interventions-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Intervention</th>
+                                            <th>Count</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

@@ -55,6 +55,11 @@ const chatSpinner = document.getElementById('chat-spinner');
 // Charts
 let statusChart = null;
 let phasesChart = null;
+let trialStagesChart = null;
+let topSponsorsChart = null;
+
+// Enhanced dashboard elements
+const enhancedDashboard = document.getElementById('enhanced-dashboard');
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', initApp);
@@ -80,18 +85,37 @@ function initApp() {
 
 async function checkAuthState() {
     try {
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        // First check if there's an active session
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
         
-        if (error) throw error;
-        
-        if (user) {
-            currentUser = user;
-            showApp();
-        } else {
+        if (sessionError) {
+            console.error('Session error:', sessionError);
             showAuth();
+            return;
         }
+        
+        // If we have a session and it contains a user, use that
+        if (sessionData && sessionData.session) {
+            const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+            
+            if (userError) {
+                console.error('User error:', userError);
+                showAuth();
+                return;
+            }
+            
+            if (user) {
+                currentUser = user;
+                showApp();
+                return;
+            }
+        }
+        
+        // No valid session or user, show auth screen
+        showAuth();
     } catch (error) {
         console.error('Auth state error:', error);
+        // Don't throw the error, just show the auth screen
         showAuth();
     }
 }
@@ -415,7 +439,7 @@ function renderClinicalTrials() {
                         <p class="card-text">
                             <strong>Organization:</strong> ${escapeHtml(safeTrialData.organization)}
                         </p>
-                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#trialDetails${index}">
+                        <button class="btn btn-sm btn-outline-primary toggle-details-btn" type="button" data-bs-toggle="collapse" data-bs-target="#trialDetails${index}">
                             Show Details
                         </button>
                         <div class="collapse mt-3" id="trialDetails${index}">
@@ -436,6 +460,9 @@ function renderClinicalTrials() {
         }).join('');
         
         clinicalTrialsContainer.innerHTML = html;
+        
+        // Add event listeners to toggle button text
+        setupCollapseListeners(clinicalTrialsContainer);
     } catch (error) {
         console.error("Error rendering clinical trials:", error);
         clinicalTrialsContainer.innerHTML = `
@@ -478,7 +505,7 @@ function renderFdaData() {
                         <p class="card-text">
                             <strong>Manufacturer:</strong> ${escapeHtml(safeDrugData.manufacturer_name)}
                         </p>
-                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#drugDetails${index}">
+                        <button class="btn btn-sm btn-outline-primary toggle-details-btn" type="button" data-bs-toggle="collapse" data-bs-target="#drugDetails${index}">
                             Show Details
                         </button>
                         <div class="collapse mt-3" id="drugDetails${index}">
@@ -496,6 +523,9 @@ function renderFdaData() {
         }).join('');
         
         fdaContainer.innerHTML = html;
+        
+        // Add event listeners to toggle button text
+        setupCollapseListeners(fdaContainer);
     } catch (error) {
         console.error("Error rendering FDA data:", error);
         fdaContainer.innerHTML = `
@@ -507,14 +537,77 @@ function renderFdaData() {
 }
 
 function generateDashboardCharts() {
-    // Status distribution chart
-    const statusCtx = document.getElementById('status-chart').getContext('2d');
+    // Hide enhanced dashboard if no data
+    if (!searchResults.clinicalTrials || searchResults.clinicalTrials.length === 0) {
+        enhancedDashboard.classList.add('d-none');
+        return;
+    } else {
+        enhancedDashboard.classList.remove('d-none');
+    }
+    
+    // Process data for all charts
     const statusData = {};
+    const phasesData = {};
+    const stagesData = {};
+    const sponsorsData = {};
+    const interventionsData = {};
+    
+    // Count total trials for percentage calculations
+    const totalTrials = searchResults.clinicalTrials.length;
     
     searchResults.clinicalTrials.forEach(trial => {
+        // Process status data
         const status = trial.overallStatus || 'Unknown';
         statusData[status] = (statusData[status] || 0) + 1;
+        
+        // Process phases data
+        const phases = trial.phases || 'Not Specified';
+        const phasesList = phases.split(',').map(p => p.trim());
+        
+        phasesList.forEach(phase => {
+            if (phase) {
+                phasesData[phase] = (phasesData[phase] || 0) + 1;
+            }
+        });
+        
+        // Process trial stages data (Recruiting, Completed, Active, etc.)
+        const stage = trial.overallStatus || 'Unknown';
+        stagesData[stage] = (stagesData[stage] || 0) + 1;
+        
+        // Process sponsors data
+        const sponsor = trial.organization || 'Unknown';
+        sponsorsData[sponsor] = (sponsorsData[sponsor] || 0) + 1;
+        
+        // Process interventions data
+        const intervention = trial.interventionDrug || 'Not specified';
+        // Split multiple interventions if comma-separated
+        const interventionList = intervention.split(',').map(i => i.trim());
+        
+        interventionList.forEach(item => {
+            if (item && item !== 'Not specified') {
+                interventionsData[item] = (interventionsData[item] || 0) + 1;
+            }
+        });
     });
+    
+    // Generate Trial Status Distribution Chart
+    generateStatusChart(statusData);
+    
+    // Generate Phases Distribution Chart
+    generatePhasesChart(phasesData);
+    
+    // Generate Trial Stages Chart
+    generateTrialStagesChart(stagesData);
+    
+    // Generate Top Sponsors Chart
+    generateTopSponsorsChart(sponsorsData);
+    
+    // Generate Top Interventions Table
+    generateTopInterventionsTable(interventionsData, totalTrials);
+}
+
+function generateStatusChart(statusData) {
+    const statusCtx = document.getElementById('status-chart').getContext('2d');
     
     const statusLabels = Object.keys(statusData);
     const statusValues = Object.values(statusData);
@@ -547,21 +640,10 @@ function generateDashboardCharts() {
             }
         }
     });
-    
-    // Phases distribution chart
+}
+
+function generatePhasesChart(phasesData) {
     const phasesCtx = document.getElementById('phases-chart').getContext('2d');
-    const phasesData = {};
-    
-    searchResults.clinicalTrials.forEach(trial => {
-        const phases = trial.phases || 'Not Specified';
-        const phasesList = phases.split(',').map(p => p.trim());
-        
-        phasesList.forEach(phase => {
-            if (phase) {
-                phasesData[phase] = (phasesData[phase] || 0) + 1;
-            }
-        });
-    });
     
     const phasesLabels = Object.keys(phasesData);
     const phasesValues = Object.values(phasesData);
@@ -595,14 +677,210 @@ function generateDashboardCharts() {
             },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function generateTrialStagesChart(stagesData) {
+    const stagesCtx = document.getElementById('trial-stages-chart').getContext('2d');
+    
+    // Sort stages by count (descending)
+    const sortedStages = Object.entries(stagesData)
+        .sort((a, b) => b[1] - a[1]);
+    
+    const stagesLabels = sortedStages.map(item => item[0]);
+    const stagesValues = sortedStages.map(item => item[1]);
+    const stagesColors = generateColors(stagesLabels.length);
+    
+    if (trialStagesChart) {
+        trialStagesChart.destroy();
+    }
+    
+    trialStagesChart = new Chart(stagesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: stagesLabels,
+            datasets: [{
+                data: stagesValues,
+                backgroundColor: stagesColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: function() {
+                // Adjust aspect ratio based on screen width
+                return window.innerWidth < 768 ? 1 : 1.5;
+            }(),
+            plugins: {
+                legend: {
+                    position: window.innerWidth < 768 ? 'bottom' : 'right',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        },
+                        padding: 15
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Trial Stages Distribution',
+                    font: {
+                        size: 14
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
                     }
                 }
             }
         }
     });
+    
+    // Add resize listener to adjust chart on window resize
+    window.addEventListener('resize', function() {
+        if (trialStagesChart) {
+            // Update legend position based on screen width
+            trialStagesChart.options.plugins.legend.position = window.innerWidth < 768 ? 'bottom' : 'right';
+            trialStagesChart.update();
+        }
+    });
+}
+
+function generateTopSponsorsChart(sponsorsData) {
+    const sponsorsCtx = document.getElementById('top-sponsors-chart').getContext('2d');
+    
+    // Sort sponsors by count (descending) and take top 5
+    const sortedSponsors = Object.entries(sponsorsData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+    
+    const sponsorsLabels = sortedSponsors.map(item => item[0]);
+    const sponsorsValues = sortedSponsors.map(item => item[1]);
+    const sponsorsColors = generateColors(sponsorsLabels.length);
+    
+    if (topSponsorsChart) {
+        topSponsorsChart.destroy();
+    }
+    
+    topSponsorsChart = new Chart(sponsorsCtx, {
+        type: 'bar',
+        data: {
+            labels: sponsorsLabels,
+            datasets: [{
+                label: 'Number of Trials',
+                data: sponsorsValues,
+                backgroundColor: sponsorsColors,
+                borderColor: sponsorsColors.map(color => color.replace('0.7', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: function() {
+                // Adjust aspect ratio based on screen width
+                return window.innerWidth < 768 ? 1 : 1.5;
+            }(),
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Top 5 Sponsors by Number of Trials',
+                    font: {
+                        size: 14
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 15
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                },
+                x: {
+                    ticks: {
+                        callback: function(value) {
+                            const label = this.getLabelForValue(value);
+                            // Truncate long sponsor names
+                            return label.length > 20 ? label.substring(0, 17) + '...' : label;
+                        },
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Add resize listener to adjust chart on window resize
+    window.addEventListener('resize', function() {
+        if (topSponsorsChart) {
+            topSponsorsChart.update();
+        }
+    });
+}
+
+function generateTopInterventionsTable(interventionsData, totalTrials) {
+    const tableBody = document.querySelector('#top-interventions-table tbody');
+    
+    // Get top 5 interventions by count
+    const topInterventions = Object.entries(interventionsData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+    
+    // Clear existing table rows
+    tableBody.innerHTML = '';
+    
+    // Add rows for top interventions
+    topInterventions.forEach((item, index) => {
+        const intervention = item[0];
+        const count = item[1];
+        const percentage = ((count / totalTrials) * 100).toFixed(1);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${escapeHtml(intervention)}</td>
+            <td>${count}</td>
+            <td>${percentage}%</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+    
+    // Add a message if no interventions found
+    if (topInterventions.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="4" class="text-center">No intervention data available</td>
+        `;
+        tableBody.appendChild(row);
+    }
 }
 
 async function submitChatMessage(e) {
@@ -819,4 +1097,27 @@ function generateColors(count) {
     }
     
     return result;
+}
+
+// Function to set up collapse event listeners
+function setupCollapseListeners(container) {
+    // Get all collapse elements in the container
+    const collapseElements = container.querySelectorAll('.collapse');
+    
+    // Add event listeners to each collapse element
+    collapseElements.forEach(collapseEl => {
+        // Find the associated toggle button
+        const toggleBtn = container.querySelector(`[data-bs-toggle="collapse"][data-bs-target="#${collapseEl.id}"]`);
+        
+        if (toggleBtn) {
+            // Add event listeners for bootstrap collapse events
+            collapseEl.addEventListener('shown.bs.collapse', () => {
+                toggleBtn.textContent = 'Show Less';
+            });
+            
+            collapseEl.addEventListener('hidden.bs.collapse', () => {
+                toggleBtn.textContent = 'Show Details';
+            });
+        }
+    });
 }
