@@ -3,271 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Trials & FDA Data Search</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>Clinical Trials & FDA Data Search App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.24.0/dist/umd/supabase.min.js"></script>
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/highlight.min.js"></script>
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Auth Pages -->
-    <div id="auth-container" class="container mt-5">
-        <!-- Login Form -->
-        <div id="login-form" class="auth-form">
-            <h2 class="text-center mb-4">Login</h2>
-            <div class="alert alert-danger d-none" id="login-error"></div>
-            <form id="login-form-element">
-                <div class="mb-3">
-                    <label for="login-email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="login-email" required>
-                </div>
-                <div class="mb-3">
-                    <label for="login-password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="login-password" required>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
-            <div class="mt-3 text-center">
-                <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
-            </div>
-            <div class="mt-4">
-                <p class="text-center">Or login with</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <button class="btn btn-outline-secondary" id="google-login">
-                        <i class="bi bi-google"></i> Google
-                    </button>
-                    <button class="btn btn-outline-secondary" id="linkedin-login">
-                        <i class="bi bi-linkedin"></i> LinkedIn
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Signup Form -->
-        <div id="signup-form" class="auth-form d-none">
-            <h2 class="text-center mb-4">Sign Up</h2>
-            <div class="alert alert-danger d-none" id="signup-error"></div>
-            <form id="signup-form-element">
-                <div class="mb-3">
-                    <label for="signup-email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="signup-email" required>
-                </div>
-                <div class="mb-3">
-                    <label for="signup-password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="signup-password" required minlength="8">
-                    <div class="form-text">Password must be at least 8 characters long</div>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Sign Up</button>
-            </form>
-            <div class="mt-3 text-center">
-                <p>Already have an account? <a href="#" id="show-login">Login</a></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main App (Hidden until logged in) -->
-    <div id="app-container" class="d-none">
-        <!-- Header -->
-        <header class="bg-primary text-white p-3 glass-card">
-            <div class="container">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h1 class="h3 mb-0">Clinical Trials & FDA Data Search</h1>
-                    <div class="d-flex align-items-center">
-                        <span id="user-email" class="me-3"></span>
-                        <button id="logout-btn" class="btn btn-outline-light btn-sm">Logout</button>
+    <div class="container-fluid">
+        <!-- Authentication Container -->
+        <div id="auth-container" class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>Clinical Trials & FDA Data Search</h4>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div id="login-form" class="card-body">
+                        <h5 class="card-title text-center mb-4">Login</h5>
+                        <div id="login-error" class="alert alert-danger d-none" role="alert"></div>
+                        <form id="login-form-element">
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="login-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="login-password" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </div>
+                        </form>
+                        <hr>
+                        <div class="d-grid gap-2">
+                            <button id="google-login" class="btn btn-outline-danger">
+                                <i class="bi bi-google me-2"></i>Login with Google
+                            </button>
+                            <button id="linkedin-login" class="btn btn-outline-primary">
+                                <i class="bi bi-linkedin me-2"></i>Login with LinkedIn
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="#" id="show-signup">Don't have an account? Sign up</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Signup Form -->
+                    <div id="signup-form" class="card-body d-none">
+                        <h5 class="card-title text-center mb-4">Create an Account</h5>
+                        <div id="signup-error" class="alert alert-danger d-none" role="alert"></div>
+                        <form id="signup-form-element">
+                            <div class="mb-3">
+                                <label for="signup-email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="signup-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="signup-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="signup-password" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success">Sign Up</button>
+                            </div>
+                        </form>
+                        <div class="text-center mt-3">
+                            <a href="#" id="show-login">Already have an account? Login</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </header>
-
-        <!-- Search Section -->
-        <section class="container mt-4">
-            <div class="card glass-card">
-                <div class="card-body">
-                    <h2 class="card-title h4">Search</h2>
-                    <form id="search-form">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label for="keyword" class="form-label">Keyword</label>
-                                <input type="text" class="form-control" id="keyword" placeholder="Enter disease or drug name" required>
-                            </div>
-                            <div class="col-12">
-                                <div class="row align-items-center">
+        </div>
+        
+        <!-- Main App Container -->
+        <div id="app-container" class="d-none">
+            <!-- Header -->
+            <div class="row py-3 bg-light border-bottom">
+                <div class="col">
+                    <h2 class="mb-0">Clinical Trials & FDA Data Search</h2>
+                </div>
+                <div class="col-auto d-flex align-items-center">
+                    <span id="user-email" class="me-3"></span>
+                    <button id="logout-btn" class="btn btn-outline-danger">Logout</button>
+                </div>
+            </div>
+            
+            <!-- Search Form -->
+            <div class="row py-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <form id="search-form">
+                                <div class="row g-3 align-items-center">
                                     <div class="col-md-6">
-                                        <div class="search-type-buttons text-start">
-                                            <label class="form-label d-block mb-2 small">Search Type</label>
-                                            <div class="btn-group btn-group-sm" role="group" aria-label="Search Type">
-                                                <input type="radio" class="btn-check" name="searchType" id="disease-btn" value="disease" checked>
-                                                <label class="btn btn-outline-primary" for="disease-btn">Disease</label>
-                                                
-                                                <input type="radio" class="btn-check" name="searchType" id="drug-btn" value="drug">
-                                                <label class="btn btn-outline-primary" for="drug-btn">Drug</label>
-                                            </div>
+                                        <input type="text" class="form-control" id="keyword" placeholder="Enter keyword (disease, drug, etc.)" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="searchType" id="searchDisease" value="disease" checked>
+                                            <label class="form-check-label" for="searchDisease">Disease</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="searchType" id="searchDrug" value="drug">
+                                            <label class="form-check-label" for="searchDrug">Drug</label>
                                         </div>
                                     </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" id="search-btn" class="btn btn-primary w-100">
+                                            <span id="search-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                            Search
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12 text-center">
-                                <button type="submit" class="btn btn-primary btn-lg px-5" id="search-btn">
-                                    <span class="spinner-border spinner-border-sm d-none" id="search-spinner"></span>
-                                    Search
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Enhanced Dashboard -->
-        <section class="container mt-4" id="enhanced-dashboard">
-            <div class="row">
-                <!-- Trial Stages Chart -->
-                <div class="col-md-6 mb-4">
-                    <div class="card dashboard-card">
-                        <div class="card-header bg-primary text-white">
-                            <h3 class="h5 mb-0">Trial Stages Distribution</h3>
-                        </div>
-                        <div class="card-body d-flex align-items-center justify-content-center">
-                            <div id="trial-stages-chart-container" class="chart-container">
-                                <canvas id="trial-stages-chart"></canvas>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Top Sponsors Chart -->
-                <div class="col-md-6 mb-4">
-                    <div class="card dashboard-card">
+            </div>
+            
+            <!-- Dashboard -->
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Clinical Trials Section -->
+                    <div class="card shadow mb-4">
                         <div class="card-header bg-primary text-white">
-                            <h3 class="h5 mb-0">Top 5 Sponsors</h3>
+                            <h5 class="mb-0">Clinical Trials (<span id="clinical-trials-count">0</span>)</h5>
                         </div>
-                        <div class="card-body d-flex align-items-center justify-content-center">
-                            <div class="chart-container">
-                                <canvas id="top-sponsors-chart"></canvas>
+                        <div class="card-body dashboard-section">
+                            <div id="clinical-trials-placeholder" class="text-center py-5">
+                                <i class="bi bi-search fs-1 text-muted"></i>
+                                <p class="mt-3">Search for clinical trials data</p>
+                            </div>
+                            <div id="clinical-trials-container" class="d-none"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <!-- FDA Data Section -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">FDA Data (<span id="fda-count">0</span>)</h5>
+                        </div>
+                        <div class="card-body dashboard-section">
+                            <div id="fda-placeholder" class="text-center py-5">
+                                <i class="bi bi-search fs-1 text-muted"></i>
+                                <p class="mt-3">Search for FDA data</p>
+                            </div>
+                            <div id="fda-container" class="d-none"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Dashboard Widgets -->
+            <div id="enhanced-dashboard" class="row d-none">
+                <div class="col-12 mb-4">
+                    <h4 class="text-center">Dashboard Analytics</h4>
+                </div>
+                <div id="dashboard-widgets" class="row">
+                    <!-- Chart Containers -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Trial Status Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="position: relative; height: 0; padding-bottom: 75%;">
+                                    <canvas id="status-chart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Trial Phases Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="position: relative; height: 0; padding-bottom: 75%;">
+                                    <canvas id="phases-chart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Trial Stages Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="position: relative; height: 0; padding-bottom: 75%;">
+                                    <canvas id="trial-stages-chart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Top 5 Sponsors</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="position: relative; height: 0; padding-bottom: 75%;">
+                                    <canvas id="top-sponsors-chart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Top Interventions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="top-interventions-table">
+                                    <table class="table table-striped custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Intervention</th>
+                                                <th>Count</th>
+                                                <th>Percentage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Table rows will be populated dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="row">
-                <!-- Top Interventions Table -->
-                <div class="col-md-12 mb-4">
-                    <div class="card dashboard-card">
-                        <div class="card-header bg-primary text-white">
-                            <h3 class="h5 mb-0">Top 5 Interventions Being Studied</h3>
+            <!-- Chat Section -->
+            <div class="row mt-4 mb-5">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">AI Assistant</h5>
+                            <small class="text-light">Ask questions about your search results</small>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover" id="top-interventions-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Intervention</th>
-                                            <th>Count</th>
-                                            <th>Percentage</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Will be populated by JavaScript -->
-                                    </tbody>
-                                </table>
+                            <div id="chat-messages" class="chat-container mb-3">
+                                <!-- Chat messages will be added here dynamically -->
+                                <div class="chat-welcome">
+                                    <p>Welcome to the AI Assistant! Search for clinical trials or FDA data first, then ask questions about the results.</p>
+                                    <p>Example questions:</p>
+                                    <ul>
+                                        <li>What are the most common interventions for these trials?</li>
+                                        <li>How many trials are in Phase 3?</li>
+                                        <li>Summarize the adverse events in the FDA data</li>
+                                    </ul>
+                                </div>
                             </div>
+                            <form id="chat-form">
+                                <div class="input-group">
+                                    <input type="text" id="chat-input" class="form-control" placeholder="Ask a question about the data..." required>
+                                    <button type="submit" id="chat-submit-btn" class="btn btn-primary">
+                                        <span id="chat-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        Send
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <!-- Results Dashboard -->
-        <section class="container mt-4">
-            <div class="row">
-                <!-- Clinical Trials Data -->
-                <div class="col-md-6">
-                    <div class="card dashboard-card">
-                        <div class="card-header bg-info text-white">
-                            <h3 class="h5 mb-0">Clinical Trials Data</h3>
-                            <span id="clinical-trials-count" class="badge bg-light text-dark">0</span>
-                        </div>
-                        <div class="card-body dashboard-body" id="clinical-trials-container">
-                            <div class="text-center py-5" id="clinical-trials-placeholder">
-                                <i class="bi bi-search fs-1"></i>
-                                <p class="mt-2">Search to see clinical trials data</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- FDA Data -->
-                <div class="col-md-6">
-                    <div class="card dashboard-card">
-                        <div class="card-header bg-warning text-dark">
-                            <h3 class="h5 mb-0">FDA Data</h3>
-                            <span id="fda-count" class="badge bg-light text-dark">0</span>
-                        </div>
-                        <div class="card-body dashboard-body" id="fda-container">
-                            <div class="text-center py-5" id="fda-placeholder">
-                                <i class="bi bi-search fs-1"></i>
-                                <p class="mt-2">Search to see FDA data</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dashboard Widgets -->
-            <div class="row mt-4" id="dashboard-widgets">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h3 class="h5 mb-0">Trial Status Distribution</h3>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="status-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h3 class="h5 mb-0">Phases Distribution</h3>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="phases-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Chat Section -->
-        <section class="container mt-4 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="h5 mb-0">Ask Questions About the Data</h3>
-                </div>
-                <div class="card-body">
-                    <div id="chat-messages" class="chat-container mb-3">
-                        <div class="chat-message system-message">
-                            <p>Hello! I can answer questions about the clinical trials and FDA data you've searched for. How can I help you?</p>
-                        </div>
-                    </div>
-                    <form id="chat-form" class="d-flex">
-                        <input type="text" class="form-control me-2" id="chat-input" placeholder="Ask a question about the data..." required>
-                        <button type="submit" class="btn btn-primary" id="chat-submit-btn">
-                            <span class="spinner-border spinner-border-sm d-none" id="chat-spinner"></span>
-                            <i class="bi bi-send"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </section>
+        </div>
     </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2.38.4"></script>
+    
     <script src="app.js"></script>
 </body>
 </html>

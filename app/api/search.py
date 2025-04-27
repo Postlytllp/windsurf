@@ -200,56 +200,53 @@ async def search(
         try:
             print(f"Fetching clinical trials data for keyword: '{request.keyword}'")
             clinical_trials_df = get_clinical_trials_data(request.keyword)
-            print(f"Clinical trials data fetched: {len(clinical_trials_df)} records")
             
-            # Print DataFrame info for debugging
-            print("Clinical trials DataFrame info:")
-            clinical_trials_df.info()
-            
-            # Check for problematic columns
-            for col in clinical_trials_df.columns:
-                if clinical_trials_df[col].dtype == 'float64':
-                    print(f"Potential problematic column (float): {col}")
-                    print(f"Sample values: {clinical_trials_df[col].head()}")
-            
-            # Convert clinical trials DataFrame to dictionaries with proper type handling
-            try:
-                # Apply safe type conversion
-                clinical_trials_df = safe_convert_types(clinical_trials_df)
+            if clinical_trials_df is not None and not clinical_trials_df.empty:
+                print(f"Clinical trials data fetched: {len(clinical_trials_df)} records")
                 
-                # Convert to dictionaries
-                clinical_trials_data = safe_dataframe_to_dict(clinical_trials_df)
-                print(f"Clinical trials data conversion successful: {len(clinical_trials_data)} records")
-            except Exception as convert_error:
-                print(f"Error converting clinical trials data: {str(convert_error)}")
-                import traceback
-                print(traceback.format_exc())
-                clinical_trials_error = f"Data conversion failed: {str(convert_error)}"
+                # Print DataFrame info for debugging
+                print("Clinical trials DataFrame info:")
+                clinical_trials_df.info()
+                
+                # Check for problematic columns
+                for col in clinical_trials_df.columns:
+                    if clinical_trials_df[col].dtype == 'float64':
+                        print(f"Potential problematic column (float): {col}")
+                        print(f"Sample values: {clinical_trials_df[col].head()}")
+                
+                # Convert clinical trials DataFrame to dictionaries with proper type handling
+                try:
+                    # Apply safe type conversion
+                    clinical_trials_df = safe_convert_types(clinical_trials_df)
+                    
+                    # Convert to dictionaries
+                    clinical_trials_data = safe_dataframe_to_dict(clinical_trials_df)
+                    print(f"Converted {len(clinical_trials_data)} clinical trials records to dictionaries")
+                except Exception as e:
+                    print(f"Error converting clinical trials DataFrame to dictionaries: {str(e)}")
+                    clinical_trials_error = f"Error processing clinical trials data: {str(e)}"
+                    clinical_trials_data = []
+            else:
+                print("No clinical trials data found or empty DataFrame returned")
                 clinical_trials_data = []
-        except Exception as ct_error:
-            print(f"Error fetching clinical trials data: {str(ct_error)}")
+        except Exception as e:
             import traceback
-            print(traceback.format_exc())
-            clinical_trials_error = f"Data fetch failed: {str(ct_error)}"
+            print(f"Error fetching clinical trials data: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
+            clinical_trials_error = f"Error fetching clinical trials data: {str(e)}"
             clinical_trials_data = []
         
         # Fetch FDA data
         try:
             print(f"Fetching FDA data for keyword: '{request.keyword}', domain: '{request.searchType}'")
-            fda_df = Open_FDA.open_fda_main(user_keyword=request.keyword, domain=request.searchType)
+            fda_df = Open_FDA.open_fda_main(request.keyword, request.searchType)
             
-            if fda_df is not None:
+            if fda_df is not None and not fda_df.empty:
                 print(f"FDA data fetched: {len(fda_df)} records")
                 
                 # Print DataFrame info for debugging
                 print("FDA DataFrame info:")
                 fda_df.info()
-                
-                # Check for problematic columns
-                for col in fda_df.columns:
-                    if fda_df[col].dtype == 'float64':
-                        print(f"Potential problematic column (float): {col}")
-                        print(f"Sample values: {fda_df[col].head()}")
                 
                 # Convert FDA DataFrame to dictionaries with proper type handling
                 try:
@@ -258,56 +255,52 @@ async def search(
                     
                     # Convert to dictionaries
                     fda_data = safe_dataframe_to_dict(fda_df)
-                    print(f"FDA data conversion successful: {len(fda_data)} records")
-                except Exception as convert_error:
-                    print(f"Error converting FDA data: {str(convert_error)}")
-                    import traceback
-                    print(traceback.format_exc())
-                    fda_error = f"Data conversion failed: {str(convert_error)}"
+                    print(f"Converted {len(fda_data)} FDA records to dictionaries")
+                except Exception as e:
+                    print(f"Error converting FDA DataFrame to dictionaries: {str(e)}")
+                    fda_error = f"Error processing FDA data: {str(e)}"
                     fda_data = []
             else:
-                print("No FDA data found")
+                print("No FDA data found or empty DataFrame returned")
                 fda_data = []
-        except Exception as fda_err:
-            print(f"Error fetching FDA data: {str(fda_err)}")
+        except Exception as e:
             import traceback
-            print(traceback.format_exc())
-            fda_error = f"Data fetch failed: {str(fda_err)}"
+            print(f"Error fetching FDA data: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
+            fda_error = f"Error fetching FDA data: {str(e)}"
             fda_data = []
         
-        # Ensure total counts are integers
-        total_clinical_trials = int(len(clinical_trials_data))
-        total_fda_data = int(len(fda_data))
+        # Check if both data sources failed
+        if clinical_trials_error and fda_error:
+            error_message = f"Search failed: {clinical_trials_error}; {fda_error}"
+            print(error_message)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=error_message
+            )
         
-        # Prepare response
-        print("Preparing response")
-        print(f"Response data types - clinical_trials: {type(clinical_trials_data)}, fda_data: {type(fda_data)}")
-        print(f"Response counts - total_clinical_trials: {total_clinical_trials} ({type(total_clinical_trials)}), total_fda_data: {total_fda_data} ({type(total_fda_data)})")
-        
-        # Create response with explicit type conversion
+        # Create response
         response = SearchResponse(
             clinical_trials=clinical_trials_data,
             fda_data=fda_data,
-            total_clinical_trials=total_clinical_trials,
-            total_fda_data=total_fda_data
+            total_clinical_trials=len(clinical_trials_data),
+            total_fda_data=len(fda_data)
         )
         
-        # Add error information to response if needed
-        if clinical_trials_error or fda_error:
-            print(f"Returning partial results with errors: CT: {clinical_trials_error}, FDA: {fda_error}")
-        else:
-            print("Search completed successfully")
-            
+        print(f"Search completed successfully: {len(clinical_trials_data)} clinical trials, {len(fda_data)} FDA records")
         return response
-    except Exception as e:
-        print(f"Unexpected error in search: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
         
-        # Return empty results with error
-        return SearchResponse(
-            clinical_trials=[],
-            fda_data=[],
-            total_clinical_trials=0,
-            total_fda_data=0
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        error_message = f"Unexpected error during search: {str(e)}"
+        print(error_message)
+        print(f"Error trace: {error_trace}")
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_message
         )

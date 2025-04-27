@@ -16,6 +16,12 @@ let searchResults = {
 };
 let chatHistory = [];
 
+// Global variables
+let statusChart = null;
+let phasesChart = null;
+let trialStagesChart = null;
+let topSponsorsChart = null;
+
 // DOM Elements
 // Auth elements
 const authContainer = document.getElementById('auth-container');
@@ -52,12 +58,6 @@ const chatInput = document.getElementById('chat-input');
 const chatSubmitBtn = document.getElementById('chat-submit-btn');
 const chatSpinner = document.getElementById('chat-spinner');
 
-// Charts
-let statusChart = null;
-let phasesChart = null;
-let trialStagesChart = null;
-let topSponsorsChart = null;
-
 // Enhanced dashboard elements
 const enhancedDashboard = document.getElementById('enhanced-dashboard');
 
@@ -81,6 +81,9 @@ chatForm.addEventListener('submit', submitChatMessage);
 function initApp() {
     // Check if user is already logged in
     checkAuthState();
+    
+    // Reset placeholders on page load
+    resetPlaceholders();
 }
 
 async function checkAuthState() {
@@ -293,6 +296,8 @@ async function handleSearch(e) {
         fdaContainer.innerHTML = '';
         clinicalTrialsPlaceholder.classList.add('d-none');
         fdaPlaceholder.classList.add('d-none');
+        clinicalTrialsContainer.classList.add('d-none');
+        fdaContainer.classList.add('d-none');
         
         console.log("Getting Supabase session...");
         // Get session from Supabase for authentication
@@ -375,11 +380,26 @@ async function handleSearch(e) {
     } catch (error) {
         console.error('Search error:', error);
         
+        // Create a more descriptive error message
+        let errorMsg = "An error occurred during the search.";
+        
+        if (error.message) {
+            errorMsg = error.message;
+        }
+        
+        // Add more detailed logging
+        console.log("Search error details:", {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        
         // Show error message to user
         clinicalTrialsPlaceholder.innerHTML = `
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle"></i>
-                <p class="mt-2">${error.message}</p>
+                <p class="mt-2">${errorMsg}</p>
+                <p class="small text-muted">Try a different search term or check your connection.</p>
             </div>
         `;
         clinicalTrialsPlaceholder.classList.remove('d-none');
@@ -387,13 +407,20 @@ async function handleSearch(e) {
         fdaPlaceholder.innerHTML = `
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle"></i>
-                <p class="mt-2">${error.message}</p>
+                <p class="mt-2">${errorMsg}</p>
+                <p class="small text-muted">Try a different search term or check your connection.</p>
             </div>
         `;
         fdaPlaceholder.classList.remove('d-none');
         
         // Hide dashboard widgets
         dashboardWidgets.classList.add('d-none');
+        
+        // Reset any chart variables that might be causing issues
+        statusChart = statusChart || null;
+        phasesChart = phasesChart || null;
+        trialStagesChart = trialStagesChart || null;
+        topSponsorsChart = topSponsorsChart || null;
     } finally {
         // Reset UI
         searchBtn.disabled = false;
@@ -404,6 +431,7 @@ async function handleSearch(e) {
 function renderClinicalTrials() {
     if (!searchResults.clinicalTrials || searchResults.clinicalTrials.length === 0) {
         clinicalTrialsContainer.innerHTML = '<div class="alert alert-info">No clinical trials found</div>';
+        clinicalTrialsContainer.classList.remove('d-none');
         return;
     }
     
@@ -460,6 +488,7 @@ function renderClinicalTrials() {
         }).join('');
         
         clinicalTrialsContainer.innerHTML = html;
+        clinicalTrialsContainer.classList.remove('d-none');
         
         // Add event listeners to toggle button text
         setupCollapseListeners(clinicalTrialsContainer);
@@ -476,6 +505,7 @@ function renderClinicalTrials() {
 function renderFdaData() {
     if (!searchResults.fdaData || searchResults.fdaData.length === 0) {
         fdaContainer.innerHTML = '<div class="alert alert-info">No FDA data found</div>';
+        fdaContainer.classList.remove('d-none');
         return;
     }
     
@@ -523,6 +553,7 @@ function renderFdaData() {
         }).join('');
         
         fdaContainer.innerHTML = html;
+        fdaContainer.classList.remove('d-none');
         
         // Add event listeners to toggle button text
         setupCollapseListeners(fdaContainer);
@@ -540,9 +571,11 @@ function generateDashboardCharts() {
     // Hide enhanced dashboard if no data
     if (!searchResults.clinicalTrials || searchResults.clinicalTrials.length === 0) {
         enhancedDashboard.classList.add('d-none');
+        dashboardWidgets.classList.add('d-none');
         return;
     } else {
         enhancedDashboard.classList.remove('d-none');
+        dashboardWidgets.classList.remove('d-none');
     }
     
     // Process data for all charts
@@ -629,13 +662,24 @@ function generateStatusChart(statusData) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,
             plugins: {
                 legend: {
-                    position: 'right'
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
                 },
                 title: {
                     display: true,
-                    text: 'Trial Status Distribution'
+                    text: 'Trial Status Distribution',
+                    font: {
+                        size: 14
+                    }
                 }
             }
         }
@@ -666,18 +710,40 @@ function generatePhasesChart(phasesData) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,
             plugins: {
                 legend: {
                     display: false
                 },
                 title: {
                     display: true,
-                    text: 'Trial Phases Distribution'
+                    text: 'Trial Phases Distribution',
+                    font: {
+                        size: 14
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 15
+                    }
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        autoSkip: true,
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
                 }
             }
         }
@@ -890,12 +956,17 @@ async function submitChatMessage(e) {
     
     if (!question) return;
     
+    // Clear input field
+    chatInput.value = '';
+    
+    let loadingMessage;
+    
     try {
         // Add user message to chat
         addChatMessage('user', question);
         
         // Show loading indicator
-        const loadingMessage = addChatMessage('ai', '<div class="loading-dots"><span>.</span><span>.</span><span>.</span></div>');
+        loadingMessage = addChatMessage('ai', '<div class="loading-dots"><span>.</span><span>.</span><span>.</span></div>');
         
         // Get the current session token
         const session = await supabaseClient.auth.getSession();
@@ -904,6 +975,24 @@ async function submitChatMessage(e) {
         if (!token) {
             throw new Error('Authentication required. Please log in.');
         }
+        
+        // Check if search results exist
+        if (!searchResults.clinicalTrials && !searchResults.fdaData) {
+            // Remove loading indicator
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
+            
+            addChatMessage('ai', 'Please perform a search first to provide context for your questions. I need data to work with to give you meaningful answers.');
+            return;
+        }
+        
+        console.log("Sending chat request with data:", {
+            query: question,
+            clinical_trials_count: searchResults.clinicalTrials?.length || 0,
+            fda_data_count: searchResults.fdaData?.length || 0,
+            chat_history_count: chatHistory.length
+        });
         
         // Send chat request to API
         const response = await fetch('/api/chat', {
@@ -914,8 +1003,8 @@ async function submitChatMessage(e) {
             },
             body: JSON.stringify({ 
                 query: question,
-                clinical_trials_data: searchResults.clinicalTrials || [],
-                fda_data: searchResults.fdaData || [],
+                clinical_trials_df: searchResults.clinicalTrials || [],
+                fda_df: searchResults.fdaData || [],
                 chat_history: chatHistory || []
             })
         });
@@ -945,6 +1034,12 @@ async function submitChatMessage(e) {
             const aiResponse = responseData.response || 'Sorry, I could not generate a response.';
             const sources = Array.isArray(responseData.sources) ? responseData.sources : [];
             
+            console.log("Received AI response:", { 
+                responseLength: aiResponse.length,
+                sourcesCount: sources.length,
+                firstFewWords: aiResponse.substring(0, 50) + "..."
+            });
+            
             // Add AI response to chat
             addChatMessage('ai', aiResponse, sources);
             
@@ -971,8 +1066,18 @@ async function submitChatMessage(e) {
             loadingMessage.remove();
         }
         
+        // Create a more helpful error message
+        let errorMessage = "Sorry, I encountered an error processing your request.";
+        
+        if (error.message) {
+            errorMessage += ` Error details: ${error.message}`;
+        }
+        
         // Display error message in chat
-        addChatMessage('error', `Error: ${error.message || 'Failed to send your message'}`);
+        addChatMessage('error', errorMessage);
+        
+        // Re-enable chat input
+        chatInput.disabled = false;
     }
 }
 
@@ -988,16 +1093,51 @@ function addChatMessage(role, content, sources = []) {
         messageContent.innerHTML = content;
         messageContent.className = 'error-text';
         messageDiv.appendChild(messageContent);
-    } else {
-        // Regular message or loading indicator
+    } else if (role === 'user') {
+        // User message styling
         const messageContent = document.createElement('p');
+        messageContent.textContent = content;
+        messageDiv.appendChild(messageContent);
+    } else {
+        // AI message or loading indicator
+        const messageContent = document.createElement('div');
+        messageContent.className = 'markdown-content';
         
         // Check if content is HTML (for loading indicators)
         if (content.includes('<div class="loading-dots">')) {
             messageContent.innerHTML = content;
         } else {
-            // Use innerHTML instead of textContent to support markdown
-            messageContent.innerHTML = content;
+            try {
+                // Configure marked.js options
+                marked.setOptions({
+                    gfm: true, // GitHub Flavored Markdown
+                    breaks: true, // Convert line breaks to <br>
+                    headerIds: true,
+                    highlight: function(code, lang) {
+                        if (window.hljs && lang && hljs.getLanguage(lang)) {
+                            try {
+                                return hljs.highlight(code, { language: lang }).value;
+                            } catch (e) {
+                                console.error('Highlight error:', e);
+                            }
+                        }
+                        return code;
+                    }
+                });
+                
+                // Use marked.js to parse markdown
+                messageContent.innerHTML = marked.parse(content);
+                
+                // Apply syntax highlighting to code blocks
+                if (window.hljs) {
+                    messageContent.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+                }
+            } catch (e) {
+                console.error('Markdown parsing error:', e);
+                messageContent.textContent = content;
+            }
         }
         
         messageDiv.appendChild(messageContent);
@@ -1018,34 +1158,36 @@ function addChatMessage(role, content, sources = []) {
                         const sourceLink = document.createElement('a');
                         sourceLink.href = source.url;
                         sourceLink.target = '_blank';
-                        sourceLink.textContent = `Trial: ${source.id}`;
-                        sourceSpan.textContent = '';
+                        sourceLink.textContent = source.id;
+                        sourceSpan.textContent = 'Trial: ';
                         sourceSpan.appendChild(sourceLink);
                     }
                 } else if (source.type === 'fda_data') {
-                    sourceSpan.textContent = `Drug: ${source.name}`;
+                    sourceSpan.textContent = `FDA: ${source.id}`;
+                    if (source.url) {
+                        const sourceLink = document.createElement('a');
+                        sourceLink.href = source.url;
+                        sourceLink.target = '_blank';
+                        sourceLink.textContent = source.id;
+                        sourceSpan.textContent = 'FDA: ';
+                        sourceSpan.appendChild(sourceLink);
+                    }
                 } else {
-                    // Generic source handling
-                    sourceSpan.textContent = source.id || source.name || 'Source';
+                    sourceSpan.textContent = `Source: ${source.id || 'Unknown'}`;
                 }
                 
                 sourcesDiv.appendChild(sourceSpan);
-                sourcesDiv.appendChild(document.createTextNode(' '));
             });
             
             messageDiv.appendChild(sourcesDiv);
         }
     }
     
-    // Add to chat container
+    // Add message to chat container
     chatMessages.appendChild(messageDiv);
     
     // Scroll to bottom
     chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Reset input field
-    chatInput.value = '';
-    chatInput.focus();
     
     return messageDiv; // Return the message div for potential removal (loading indicators)
 }
@@ -1121,3 +1263,23 @@ function setupCollapseListeners(container) {
         }
     });
 }
+
+// Function to reset placeholders to their default state
+function resetPlaceholders() {
+    clinicalTrialsPlaceholder.innerHTML = `
+        <i class="bi bi-search fs-1 text-muted"></i>
+        <p class="mt-3">Search for clinical trials data</p>
+    `;
+    clinicalTrialsPlaceholder.classList.remove('d-none');
+    
+    fdaPlaceholder.innerHTML = `
+        <i class="bi bi-search fs-1 text-muted"></i>
+        <p class="mt-3">Search for FDA data</p>
+    `;
+    fdaPlaceholder.classList.remove('d-none');
+}
+
+// Reset placeholders on page load
+document.addEventListener('DOMContentLoaded', function() {
+    resetPlaceholders();
+});

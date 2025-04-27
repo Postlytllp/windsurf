@@ -15,8 +15,8 @@ def mock_get_current_user():
         yield
 
 @pytest.fixture
-def sample_clinical_trials_data():
-    """Sample clinical trials data for testing."""
+def sample_clinical_trials_df():
+    """Return sample clinical trials data for testing."""
     return [
         {
             "nctId": "NCT01234567",
@@ -43,8 +43,8 @@ def sample_clinical_trials_data():
     ]
 
 @pytest.fixture
-def sample_fda_data():
-    """Sample FDA data for testing."""
+def sample_fda_df():
+    """Return sample FDA data for testing."""
     return [
         {
             "brand_name": "Test Brand 1",
@@ -68,7 +68,7 @@ def sample_fda_data():
         }
     ]
 
-def test_chat_success(mock_get_current_user, sample_clinical_trials_data, sample_fda_data):
+def test_chat_success(mock_get_current_user, sample_clinical_trials_df, sample_fda_df):
     """Test successful chat request."""
     # Mock the process_chat_query function
     with patch('app.api.chat.process_chat_query', return_value=("Test response", [{"type": "clinical_trial", "id": "NCT01234567", "title": "Test Trial 1"}])):
@@ -79,8 +79,8 @@ def test_chat_success(mock_get_current_user, sample_clinical_trials_data, sample
             headers={"Authorization": "Bearer test_token"},
             json={
                 "query": "What trials are available?",
-                "clinical_trials_data": sample_clinical_trials_data,
-                "fda_data": sample_fda_data,
+                "clinical_trials_df": sample_clinical_trials_df,
+                "fda_df": sample_fda_df,
                 "chat_history": []
             }
         )
@@ -104,8 +104,8 @@ def test_chat_no_data(mock_get_current_user):
             headers={"Authorization": "Bearer test_token"},
             json={
                 "query": "What trials are available?",
-                "clinical_trials_data": [],
-                "fda_data": [],
+                "clinical_trials_df": [],
+                "fda_df": [],
                 "chat_history": []
             }
         )
@@ -117,8 +117,8 @@ def test_chat_no_data(mock_get_current_user):
         assert response.json()["response"] == "No data available to answer your question."
         assert len(response.json()["sources"]) == 0
 
-def test_chat_error(mock_get_current_user, sample_clinical_trials_data, sample_fda_data):
-    """Test chat request with an error."""
+def test_chat_error(mock_get_current_user, sample_clinical_trials_df, sample_fda_df):
+    """Test chat request with error."""
     # Mock the process_chat_query function to raise an exception
     with patch('app.api.chat.process_chat_query', side_effect=Exception("Test error")):
         
@@ -128,8 +128,8 @@ def test_chat_error(mock_get_current_user, sample_clinical_trials_data, sample_f
             headers={"Authorization": "Bearer test_token"},
             json={
                 "query": "What trials are available?",
-                "clinical_trials_data": sample_clinical_trials_data,
-                "fda_data": sample_fda_data,
+                "clinical_trials_df": sample_clinical_trials_df,
+                "fda_df": sample_fda_df,
                 "chat_history": []
             }
         )
@@ -140,14 +140,13 @@ def test_chat_error(mock_get_current_user, sample_clinical_trials_data, sample_f
         assert "Test error" in response.json()["detail"]
 
 def test_chat_unauthorized():
-    """Test chat request without authentication."""
-    # Test request without auth header
+    """Test unauthorized chat request."""
     response = client.post(
         "/api/chat",
         json={
             "query": "What trials are available?",
-            "clinical_trials_data": [],
-            "fda_data": [],
+            "clinical_trials_df": [],
+            "fda_df": [],
             "chat_history": []
         }
     )

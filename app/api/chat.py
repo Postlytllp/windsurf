@@ -23,8 +23,8 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     """Chat request model."""
     query: str
-    clinical_trials_data: Optional[List[Dict[str, Any]]] = None
-    fda_data: Optional[List[Dict[str, Any]]] = None
+    clinical_trials_df: Optional[List[Dict[str, Any]]] = None
+    fda_df: Optional[List[Dict[str, Any]]] = None
     chat_history: Optional[List[ChatMessage]] = []
 
 class ChatResponse(BaseModel):
@@ -53,14 +53,14 @@ async def chat(
     try:
         # Log the incoming request for debugging
         print(f"Processing chat query: {request.query}")
-        print(f"Clinical trials data: {len(request.clinical_trials_data) if request.clinical_trials_data else 0} items")
-        print(f"FDA data: {len(request.fda_data) if request.fda_data else 0} items")
+        print(f"Clinical trials data: {len(request.clinical_trials_df) if request.clinical_trials_df else 0} items")
+        print(f"FDA data: {len(request.fda_df) if request.fda_df else 0} items")
         
         # Process the chat query
         response, sources = await process_chat_query(
             query=request.query,
-            clinical_trials_data=request.clinical_trials_data,
-            fda_data=request.fda_data,
+            clinical_trials_df=request.clinical_trials_df,
+            fda_df=request.fda_df,
             chat_history=[{"role": message.role, "content": message.content, "sources": message.sources} for message in request.chat_history]
         )
         
